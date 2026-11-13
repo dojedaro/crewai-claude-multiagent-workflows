@@ -1,90 +1,62 @@
-# 🤖 CrewAI + Claude Multi-Agent Workflows
+# CrewAI + Claude Multi-Agent Workflows
 
-A small project showcasing **multi-agent automation** using **CrewAI** and **Claude (Anthropic)** via LangChain.  
-It demonstrates how specialized agents can collaborate to produce better structured outputs than a single prompt — across **three practical use cases**.
+**Three two-agent pipelines built with CrewAI and Claude: research into a blog post, a startup idea into an investor pitch, and a Seoul itinerary into a bilingual (English and Korean) travel blog.**
 
----
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dojedaro/crewai-claude-multiagent-workflows/blob/main/crewai_claude_multiagent_workflows.ipynb)
+[![Notebook checks](https://github.com/dojedaro/crewai-claude-multiagent-workflows/actions/workflows/notebooks.yml/badge.svg)](https://github.com/dojedaro/crewai-claude-multiagent-workflows/actions/workflows/notebooks.yml)
 
-## 🎯 What This Project Shows
+## The three crews
 
-This repo includes a notebook implementing **3 multi-agent workflows**:
+| Crew | Agent 1 → | Agent 2 | Output in the saved run |
+|---|---|---|---|
+| Research to blog | AI Researcher: real-world uses of AI in education | Article Writer: 150-word post | "How AI is Transforming Education Today", citing tutoring systems such as MATHia |
+| Idea to pitch | Startup Ideator: problem, users, solution for an EdTech idea | Pitch Writer: one investor paragraph | *MentorMatch*, an AI platform matching students with industry mentors |
+| Trip to bilingual blog | Seoul Itinerary Planner: 3-day budget trip | Bilingual Travel Blogger: English + Korean summary | "Seoul Steal: A Budget-Friendly Solo Trip to Korea's Capital" |
 
-### 1) 🧠 Research → Blog Writing (AI in Education)
-- **Researcher Agent**: gathers a short, factual summary of real-world AI use in education
-- **Writer Agent**: converts the summary into a short blog-style article
+## How it works
 
-**Outcome:** a compact “research-to-content” pipeline.
+```mermaid
+flowchart LR
+    subgraph Crew[each crew: sequential process]
+        A1[Agent 1<br/>role, goal, backstory] -->|task 1 output| A2[Agent 2<br/>role, goal, backstory]
+    end
+    I([topic]) --> A1
+    A2 --> O([Markdown output])
+    L[Claude via LangChain] -.-> A1
+    L -.-> A2
+```
 
-### 2) 🚀 Startup Ideation → Investor Pitch (EdTech)
-- **Startup Ideator Agent**: proposes a startup concept (problem → target users → solution)
-- **Pitch Writer Agent**: writes a concise investor-style pitch paragraph
+Each crew has two specialized **agents** (role, goal, backstory, and the shared Claude LLM) and two
+**tasks** with an expected output. CrewAI runs the tasks in order and passes the first task's output
+to the second agent as context. Splitting "gather" from "write" keeps each prompt short and lets
+each agent be instructed for one job.
 
-**Outcome:** a quick “idea-to-pitch” generator.
+## Run it
 
-### 3) 🇰🇷 Seoul Trip Planner → Bilingual Travel Blog
-- **Itinerary Planner Agent**: produces a 3-day budget itinerary
-- **Bilingual Travel Blogger Agent**: writes a short blog-style summary in **English + Korean**
+```bash
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY=...
+jupyter notebook crewai_claude_multiagent_workflows.ipynb
+```
 
-**Outcome:** an itinerary + narrative generator with bilingual output.
+The notebook uses `claude-3-opus-20240229`, which Anthropic has retired, through LangChain's
+deprecated `langchain.chat_models` import. To run it today, switch to
+`from langchain_anthropic import ChatAnthropic` and a current model such as `claude-sonnet-5-5`.
 
----
+## Stack
 
-## 🧩 Architecture (High Level)
+Python, CrewAI, LangChain (Anthropic integration), Claude.
 
-Each workflow follows the same pattern:
+## Limitations and next steps
 
-1. Define role-specific **Agents** (goal + backstory + LLM)
-2. Define sequential **Tasks** (expected outputs)
-3. Run a **Crew** to coordinate agent collaboration
-4. Display formatted results (Markdown output)
+- **No grounding.** The researcher agent has no search tool, so "research" is the model's memory;
+  facts such as named products should be verified or sourced. A web-search tool plus citation
+  checks fixes this ([factcheck-agents](https://github.com/dojedaro/factcheck-agents) does it
+  without a framework).
+- **No comparison with one prompt.** Whether two agents beat a single well-written prompt was never
+  measured; for tasks this small, they may not.
+- Structured outputs (a Pydantic model per task) would make the hand-off between agents checkable.
 
----
+## License
 
-## 🛠️ Tech Stack
-
-- **CrewAI** (agent + task orchestration)
-- **Anthropic Claude** (LLM)
-- **LangChain Anthropic** integration (`langchain-anthropic`)
-- Python utilities for formatting and environment variable handling
-
----
-
-## 🔐 API Key Setup
-
-This project requires an **Anthropic API key**.
-
-Recommended approach:
-- Set `ANTHROPIC_API_KEY` as an environment variable
-- Avoid committing secrets to the repository
-
----
-
-## ▶️ How to Run
-
-1. Install dependencies:
-   - `crewai`
-   - `langchain`
-   - `langchain-community`
-   - `langchain-anthropic`
-
-2. Set your API key (`ANTHROPIC_API_KEY`)
-
-3. Run the notebook top-to-bottom and review outputs for each workflow.
-
----
-
-## ✅ Notes on Professional Usage
-
-- The outputs are generated by an LLM and should be reviewed before real-world use.
-- For production: add citations, add web tools (if needed), and enforce structured output schemas.
-
----
-
-## 🚀 Ideas for Extensions
-
-- Add tool use (web search, retrieval, calculators) to the Researcher agent
-- Add evaluation (rubrics, scoring) for pitch quality or itinerary realism
-- Export results to Markdown files automatically (for blog publishing)
-- Add a small UI (Streamlit) to choose use cases interactively
-
----
+MIT
